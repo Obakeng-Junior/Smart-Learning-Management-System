@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1008440496133",
+    "project_id": "ai-powered-app-9f8f5",
+    "storage_bucket": "ai-powered-app-9f8f5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008440496133:android:3b272c060e4cf26e8c8c6c",
+        "android_client_info": {
+          "package_name": "com.aipoweredlearning.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyZhr6kf967ByoE0FvoXKkHafj3LaLZUM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
