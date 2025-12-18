@@ -78,9 +78,16 @@ This approach avoids dependency on third-party AI APIs and ensures full control 
 
 ---
 
-## 🔑 Running the Mobile App
+## 🔐 Configuration (API Key)
 
-The Flutter app now uses **environment variables for sensitive keys**. To run the app, provide your Firebase API key securely using the `--dart-define` flag:
+This project uses Firebase.  
+For security reasons, API keys are **not included** in the repository.
+
+To run the app:
+
+1. Create a Firebase project
+2. Enable Authentication and Firestore
+3. Run the app with:
 
 ```bash
-flutter run --dart-define=API_KEY=API_KEY_HERE
+flutter run --dart-define=API_KEY="YOUR_FIREBASE_API_KEY"
