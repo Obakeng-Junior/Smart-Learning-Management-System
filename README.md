@@ -6,7 +6,7 @@ An advanced learning management system (LMS) designed to enhance student learnin
 
 ## 🚀 Project Overview
 
-This project aims to address the challenge of  learning platforms by introducing **adaptive and intelligent learning support**. Instead of static content delivery, the system tracks student progress, learning behavior, and interactions to provide personalized assistance.
+This project aims to address the challenge of learning platforms by introducing **adaptive and intelligent learning support**. Instead of static content delivery, the system tracks student progress, learning behavior, and interactions to provide personalized assistance.
 
 The platform is suitable for academic institutions and was developed as part of an **IT research and final-year project**.
 
@@ -37,7 +37,7 @@ The system consists of two main components:
 
 ## 🤖 Smart Tutor (ML.NET Web API)
 
-The smart Tutor is implemented using a **custom ML.NET-powered Web API**:
+The Smart Tutor is implemented using a **custom ML.NET-powered Web API**:
 
 * Uses a **CSV-based dataset** containing questions and correct answers
 * Processes student questions sent from the Flutter app via REST API
@@ -78,36 +78,9 @@ This approach avoids dependency on third-party AI APIs and ensures full control 
 
 ---
 
-## 📈 Future Enhancements
+## 🔑 Running the Mobile App
 
-* 🎮 Gamification (badges, points, achievements)
-* 🧠 Smart driven smart content recommendations
-* 🌐 Integration with live external educational resources
-* 📊 Advanced learning analytics dashboards
-  
+The Flutter app now uses **environment variables for sensitive keys**. To run the app, provide your Firebase API key securely using the `--dart-define` flag:
 
----
-
-## 🧪 Project Status
-
-✅ Core features implemented
-🔧 Smart Tutor active via ML.NET Web API
-🚧 Advanced recommendations planned
-
----
-
-## 👨‍🎓 Author
-
-**Junior Mohale**
-IT Graduate | Software Developer
-
----
-
-## 📄 License
-
-This project is for academic and portfolio purposes. Licensing can be updated if the project is extended for production use.
-
----
-
-⭐ *Feel free to star this repository if you find it useful!*
-
+```bash
+flutter run --dart-define=API_KEY=AIzaSyCwI7ZJMZ1K2wnJB-41jMxE1tndnsYEX3I
