@@ -1,0 +1,49 @@
+﻿@model AI_Powered_Learning_Application.Models.Quiz
+@{
+    ViewBag.Title = "Create Quiz";
+}
+
+<h2>Create Quiz</h2>
+
+<form asp-action="Create" method="post">
+    <input type="hidden" asp-for="CourseId" />
+    <input type="hidden" asp-for="ContentId" />
+
+    <div class="form-group">
+        <label>Question</label>
+        <input asp-for="Question" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Option A</label>
+        <input asp-for="OptionA" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Option B</label>
+        <input asp-for="OptionB" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Option C</label>
+        <input asp-for="OptionC" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Option D</label>
+        <input asp-for="OptionD" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Correct Answer</label>
+        <select asp-for="CorrectAnswer" class="form-control" required>
+            <option value="">Select Correct Answer</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Quiz</button>
+</form>

@@ -1,0 +1,467 @@
+﻿@using AI_Powered_Learning_Application.Models.ViewModels
+@model StudentDetailViewModel
+
+@{
+    ViewData["Title"] = $"Student Progress - {Model.Name} {Model.Surname}";
+}
+
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center py-4">
+        <div>
+            <h1 class="h3 mb-2" style="color: #1e3a8a; font-weight: 600;">Student Progress </h1>
+            <p class="mb-0" style="color: #6b7280;">Detailed performance metrics for @Model.Name @Model.Surname</p>
+        </div>
+        <a href="@Url.Action("Index", "Student")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Student List
+        </a>
+    </div>
+
+    <!-- Performance Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #1e40af, #3730a3);">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x text-white-50 mb-3"></i>
+                    <h2 class="text-white mb-1" style="font-weight: 700;">@Model.OverallQuizScore.ToString("F1")%</h2>
+                    <p class="text-white-50 mb-0">Average Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #059669, #047857);">
+                <div class="card-body text-center">
+                    <i class="fas fa-trophy fa-2x text-white-50 mb-3"></i>
+                    <h2 class="text-white mb-1" style="font-weight: 700;">@Model.TotalCompletedCourses/@Model.TotalCourses</h2>
+                    <p class="text-white-50 mb-0">Courses Completed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x text-white-50 mb-3"></i>
+                    <h2 class="text-white mb-1" style="font-weight: 700;">@Model.TotalScore</h2>
+                    <p class="text-white-50 mb-0">Total Points</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #7c3aed, #6d28d9);">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-graduate fa-2x text-white-50 mb-3"></i>
+                    <h2 class="text-white mb-1" style="font-weight: 700;">@Model.SkillLevel</h2>
+                    <p class="text-white-50 mb-0">Skill Level</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                        <i class="fas fa-tachometer-alt me-2"></i>Learning Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-book-open fa-2x text-primary mb-2"></i>
+                                <h4 class="mb-1" style="color: #1e3a8a;">@Model.CourseProgress.Sum(c => c.TotalLessons)</h4>
+                                <p class="text-muted mb-0">Total Lessons</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h4 class="mb-1" style="color: #1e3a8a;">@Model.CourseProgress.Sum(c => c.CompletedLessons)</h4>
+                                <p class="text-muted mb-0">Completed</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <h4 class="mb-1" style="color: #1e3a8a;">@Model.CourseProgress.Sum(c => c.Lessons.Count(l => l.Viewed && !l.Completed))</h4>
+                                <p class="text-muted mb-0">In Progress</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-hourglass-start fa-2x text-secondary mb-2"></i>
+                                <h4 class="mb-1" style="color: #1e3a8a;">@Model.CourseProgress.Sum(c => c.Lessons.Count(l => !l.Viewed))</h4>
+                                <p class="text-muted mb-0">Not Started</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Information -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                        <i class="fas fa-user me-2"></i>Student Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-semibold">Name:</div>
+                        <div class="col-sm-8">@Model.FullName</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-semibold">Email:</div>
+                        <div class="col-sm-8">@Model.Email</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-semibold">Skill Level:</div>
+                        <div class="col-sm-8">
+                            <span class="badge @GetSkillLevelBadgeClass(Model.SkillLevel) px-3 py-2">
+                                <i class="fas @GetSkillLevelIcon(Model.SkillLevel) me-1"></i>@Model.SkillLevel
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-semibold">Status:</div>
+                        <div class="col-sm-8">
+                            <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-danger") px-3 py-2">
+                                <i class="fas @(Model.Status == "Active" ? "fa-check-circle" : "fa-times-circle") me-1"></i>@Model.Status
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-semibold">Joined Date:</div>
+                        <div class="col-sm-8">
+                            <i class="fas fa-calendar text-primary me-2"></i>@Model.CreatedAt.ToString("MMM dd, yyyy")
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 fw-semibold">Last Activity:</div>
+                        <div class="col-sm-8">
+                            <i class="fas fa-clock text-primary me-2"></i>@Model.LastActivityFormatted
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                        <i class="fas fa-book me-2"></i>Subjects of Interest
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.SubjectsOfInterest.Any())
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var subject in Model.SubjectsOfInterest.Distinct())
+                            {
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2"
+                                      style="border: 1px solid #dbeafe;">
+                                    <i class="fas fa-tag me-1"></i>@subject
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-book-open fa-3x text-muted opacity-25 mb-3"></i>
+                            <p class="text-muted mb-0">No subjects of interest specified.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Progress Summary -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                <i class="fas fa-list-alt me-2"></i>Course Progress Summary
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                @foreach (var course in Model.CourseProgress)
+                {
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid @GetCourseColor(course) !important;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">@course.CourseName</h6>
+                                    <span class="badge @GetProgressBadgeClass(course.CompletionPercentage) px-3 py-2">
+                                        @(course.CompletionPercentage > 0 ? course.CompletionPercentage.ToString("F1") + "%" : "Not Started")
+                                    </span>
+                                </div>
+
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar @GetProgressBarClass(course.CompletionPercentage)"
+                                         style="width: @course.CompletionPercentage%">
+                                    </div>
+                                </div>
+
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Completed</small>
+                                        <span class="fw-bold text-success">@course.CompletedLessons</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">In Progress</small>
+                                        <span class="fw-bold text-warning">@course.Lessons.Count(l => l.Viewed && !l.Completed)</span>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Total</small>
+                                        <span class="fw-bold text-primary">@course.TotalLessons</span>
+                                    </div>
+                                </div>
+
+                                @if (course.CompletedLessons > 0)
+                                {
+                                    <div class="mt-3 pt-3 border-top">
+                                        <small class="text-muted">
+                                            <i class="fas fa-chart-line me-1 text-primary"></i>
+                                            Average Score: <strong>@course.AverageQuizScore.ToString("F1")%</strong>
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Quiz Activity -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                <i class="fas fa-history me-2"></i>Recent Quiz Activity
+            </h5>
+        </div>
+        <div class="card-body">
+            @{
+                var recentQuizzes = Model.CourseProgress
+                .SelectMany(c => c.Lessons)
+                .SelectMany(l => l.QuizResponses)
+                .OrderByDescending(r => r.Timestamp)
+                .Take(5)
+                .ToList();
+            }
+
+            @if (recentQuizzes.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var quiz in recentQuizzes)
+                    {
+                        var lesson = Model.CourseProgress
+                        .SelectMany(c => c.Lessons)
+                        .First(l => l.QuizResponses.Contains(quiz));
+                        var course = Model.CourseProgress
+                        .First(c => c.Lessons.Contains(lesson));
+
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1" style="color: #1e3a8a;">@course.CourseName</h6>
+                                    <p class="mb-1 text-muted">@lesson.LessonName</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>@quiz.Timestamp.ToString("MMM dd, yyyy HH:mm")
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @GetScoreBadgeClass(quiz.QuizScore) px-3 py-2 mb-2">
+                                        @quiz.QuizScore.ToString("F1")%
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">Attempt @quiz.Attempt</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted opacity-25 mb-3"></i>
+                    <p class="text-muted mb-0">No quiz activity yet.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Quiz Details Modal -->
+<div class="modal fade" id="quizDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quizDetailsModalTitle">Quiz Attempt Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="quizDetailsModalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showQuizDetails(courseName, lessonName, quizResponses) {
+            const modalTitle = document.getElementById('quizDetailsModalTitle');
+            const modalBody = document.getElementById('quizDetailsModalBody');
+
+            modalTitle.textContent = `${courseName} - ${lessonName} Quiz Attempts`;
+
+            let html = `<div class="quiz-attempts">`;
+
+            quizResponses.forEach((attempt, index) => {
+                html += `
+                    <div class="card mb-3 ${attempt.isBestAttempt ? 'border-success' : ''}">
+                        <div class="card-header ${attempt.isBestAttempt ? 'bg-success text-white' : 'bg-light'}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>Attempt ${attempt.attempt}</strong>
+                                ${attempt.isBestAttempt ? '<span class="badge bg-warning">Best Attempt</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Question:</strong> ${attempt.question || 'N/A'}</p>
+                                    <p><strong>Selected Answer:</strong> ${attempt.selectedAnswer || 'N/A'}</p>
+                                    <p><strong>Correct Answer:</strong> ${attempt.correctAnswer || 'N/A'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Quiz Score:</strong>
+                                        <span class="badge ${attempt.quizScore >= 70 ? 'bg-success' : 'bg-danger'}">
+                                            ${attempt.quizScoreDisplay}
+                                        </span>
+                                    </p>
+                                    <p><strong>Points:</strong>
+                                        <span class="badge ${attempt.isCorrect ? 'bg-success' : 'bg-danger'}">
+                                            ${attempt.pointsScoreDisplay}
+                                        </span>
+                                    </p>
+                                    <p><strong>Result:</strong>
+                                        <span class="badge ${attempt.isCorrect ? 'bg-success' : 'bg-danger'}">
+                                            ${attempt.result}
+                                        </span>
+                                    </p>
+                                    <p><strong>Date:</strong> ${attempt.timestampFormatted}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            modalBody.innerHTML = html;
+        }
+    </script>
+}
+
+@functions {
+    public string GetProgressBarClass(double percentage)
+    {
+        if (percentage >= 80) return "bg-success";
+        if (percentage >= 50) return "bg-info";
+        if (percentage >= 30) return "bg-warning";
+        return "bg-secondary";
+    }
+
+    public string GetProgressBadgeClass(double percentage)
+    {
+        if (percentage >= 80) return "bg-success";
+        if (percentage >= 50) return "bg-info";
+        if (percentage >= 30) return "bg-warning";
+        return "bg-secondary";
+    }
+
+    public string GetScoreBadgeClass(double score)
+    {
+        if (score >= 90) return "bg-success";
+        if (score >= 80) return "bg-info";
+        if (score >= 70) return "bg-warning";
+        return "bg-danger";
+    }
+
+    public string GetSkillLevelBadgeClass(string skillLevel)
+    {
+        return skillLevel?.ToLower() switch
+        {
+            "advanced" => "bg-danger",
+            "intermediate" => "bg-warning",
+            "beginner" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    public string GetSkillLevelIcon(string skillLevel)
+    {
+        return skillLevel?.ToLower() switch
+        {
+            "advanced" => "fa-rocket",
+            "intermediate" => "fa-chart-line",
+            "beginner" => "fa-seedling",
+            _ => "fa-user"
+        };
+    }
+
+    public string GetCourseColor(CourseProgressViewModel course)
+    {
+        // Generate consistent colors based on course index
+        var colors = new[] { "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4", "#84cc16" };
+        var index = Model.CourseProgress.ToList().IndexOf(course) % colors.Length;
+        return colors[index];
+    }
+}
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .badge {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .progress {
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    .list-group-item {
+        border-radius: 8px !important;
+        margin-bottom: 8px;
+    }
+</style>

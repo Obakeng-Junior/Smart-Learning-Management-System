@@ -1,0 +1,60 @@
+﻿@model AI_Powered_Learning_Application.Models.CourseContent
+
+<h2>Delete Course Content</h2>
+
+<div class="alert alert-warning">
+    <h4>Are you sure you want to delete the following content?</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Title</dt>
+        <dd class="col-sm-10">@Model.Title</dd>
+
+        <dt class="col-sm-2">Type</dt>
+        <dd class="col-sm-10">@Model.ContentType</dd>
+
+        @if (Model.ContentUrls.Any())
+        {
+            <dt class="col-sm-2">Content</dt>
+            <dd class="col-sm-10">
+                @foreach (var url in Model.ContentUrls)
+                {
+                    <div class="mb-2">
+                        @if (url.Contains("youtube.com") || url.Contains("youtu.be"))
+                        {
+                            <div class="embed-responsive embed-responsive-16by9" style="max-width: 400px;">
+                                <iframe class="embed-responsive-item"
+                                        src="https://www.youtube.com/embed/@(ExtractYouTubeId(url))"
+                                        allowfullscreen></iframe>
+                            </div>
+                        }
+                        else if (url.EndsWith(".pdf"))
+                        {
+                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                            <a href="@url" target="_blank">View PDF</a>
+                        }
+                        else
+                        {
+                            <a href="@url" target="_blank">View Content</a>
+                        }
+                    </div>
+                }
+            </dd>
+        }
+    </dl>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="CourseId" />
+    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+    <a href="@Url.Action("Details", "ManageCourse", new { id = Model.CourseId })" class="btn btn-secondary">Cancel</a>
+</form>
+
+@functions {
+    public string ExtractYouTubeId(string url)
+    {
+        var regExp = new System.Text.RegularExpressions.Regex(@"^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*");
+        var match = regExp.Match(url);
+        return (match.Success && match.Groups[2].Length == 11) ? match.Groups[2].Value : null;
+    }
+}

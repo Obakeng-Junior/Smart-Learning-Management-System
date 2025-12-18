@@ -1,0 +1,468 @@
+﻿@model AI_Powered_Learning_Application.Models.ViewModels.CourseContentDetailsViewModel
+@inject AI_Powered_Learning_Application.Services.IFirebaseStorageService FirebaseStorageService
+
+<h2>@Model.Content.Title</h2>
+<p>@Model.Content.Description</p>
+<p><strong>Type:</strong> @Model.Content.ContentType</p>
+
+@if (Model.Content.ContentUrls != null && Model.Content.ContentUrls.Any())
+{
+    <h4>Content Files/Links</h4>
+    <div class="content-container">
+        @foreach (var url in Model.Content.ContentUrls)
+        {
+            <div class="content-item mb-4 p-3 border rounded">
+                @if (url.Contains("youtube.com") || url.Contains("youtu.be"))
+                {
+                    <div class="video-container">
+                        <h5><i class="fab fa-youtube text-danger"></i> YouTube Video</h5>
+                        <div class="embed-responsive embed-responsive-16by9" style="max-width: 560px;">
+                            <iframe class="embed-responsive-item"
+                                    src="https://www.youtube.com/embed/@(ExtractYouTubeId(url))"
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    </div>
+                }
+                else if (IsPdfUrl(url))
+                {
+                    <div class="pdf-container">
+                        <h5><i class="fas fa-file-pdf text-danger"></i> PDF Document</h5>
+                        <div class="pdf-actions mb-3">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-success"
+                                        onclick="loadPdfJsViewer('@Model.Content.Id', '@GetPdfUrl(url)')">
+                                    <i class="fas fa-eye"></i> Preview PDF
+                                </button>
+                                <a href="@GetPdfUrl(url)" target="_blank" class="btn btn-outline-primary">
+                                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                                </a>
+                                <a href="@GetPdfUrl(url)" download class="btn btn-outline-info">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- PDF.js Viewer Container -->
+                        <div id="pdfjs-viewer-@Model.Content.Id" class="embedded-pdf-viewer mt-3" style="display: none;">
+                            <div class="pdfjs-controls mb-2">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="changePage('@Model.Content.Id', -1)">
+                                        <i class="fas fa-chevron-left"></i> Prev
+                                    </button>
+                                    <span class="btn btn-outline-dark page-info">Page: <span id="page-num-@Model.Content.Id">1</span> / <span id="page-count-@Model.Content.Id">0</span></span>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="changePage('@Model.Content.Id', 1)">
+                                        <i class="fas fa-chevron-right"></i> Next
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="changeZoom('@Model.Content.Id', 0.2)">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="changeZoom('@Model.Content.Id', -0.2)">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" onclick="resetZoom('@Model.Content.Id')">
+                                        <i class="fas fa-sync-alt"></i> Reset
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="closePdfViewer('@Model.Content.Id')">
+                                        <i class="fas fa-times"></i> Close
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="pdf-loading alert alert-info alert-sm mb-2">
+                                <i class="fas fa-spinner fa-spin"></i> Loading PDF...
+                            </div>
+                            <div class="pdf-canvas-container" style="text-align: center;">
+                                <canvas id="pdf-canvas-@Model.Content.Id" style="display: none; border: 1px solid #ddd; max-width: 100%;"></canvas>
+                            </div>
+                            <div class="pdf-error alert alert-danger mt-2" style="display: none;">
+                                <p><i class="fas fa-exclamation-triangle"></i> Failed to load PDF. Please try opening in a new tab or downloading instead.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (url.EndsWith(".mp4") || url.EndsWith(".mov") || url.EndsWith(".avi"))
+                {
+                    <div class="video-container">
+                        <h5><i class="fas fa-video text-primary"></i> Video File</h5>
+                        <video controls width="100%" style="max-width: 600px;" class="bg-dark rounded">
+                            <source src="@url" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                }
+                else if (url.Contains("cloudinary.com") && (url.Contains(".jpg") || url.Contains(".jpeg") || url.Contains(".png") || url.Contains(".gif")))
+                {
+                    <div class="image-container">
+                        <h5><i class="fas fa-image text-success"></i> Image</h5>
+                        <img src="@url" alt="Content Image" style="max-width: 100%; height: auto; max-height: 400px;" class="img-thumbnail" />
+                    </div>
+                }
+                else
+                {
+                    <div class="link-container">
+                        <h5><i class="fas fa-link text-info"></i> External Link</h5>
+                        <a href="@url" target="_blank" class="btn btn-outline-secondary">
+                            <i class="fas fa-external-link-alt"></i> Visit Link: @(url.Length > 50 ? url.Substring(0, 50) + "..." : url)
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<hr />
+<h3><i class="fas fa-question-circle"></i> Quizzes</h3>
+
+@if (Model.Quizzes.Any())
+{
+    <div class="quizzes-container">
+        @foreach (var quiz in Model.Quizzes)
+        {
+            <div class="quiz-item card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">@quiz.Question</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Quiz Options -->
+                    <div class="quiz-options mb-3">
+                        @if (!string.IsNullOrEmpty(quiz.OptionA))
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quiz-@quiz.Id" id="optionA-@quiz.Id" disabled>
+                                <label class="form-check-label" for="optionA-@quiz.Id">
+                                    <strong>A:</strong> @quiz.OptionA
+                                    @if (quiz.CorrectAnswer == "A")
+                                    {
+                                        <span class="badge bg-success ms-2"><i class="fas fa-check"></i> Correct</span>
+                                    }
+                                </label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(quiz.OptionB))
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quiz-@quiz.Id" id="optionB-@quiz.Id" disabled>
+                                <label class="form-check-label" for="optionB-@quiz.Id">
+                                    <strong>B:</strong> @quiz.OptionB
+                                    @if (quiz.CorrectAnswer == "B")
+                                    {
+                                        <span class="badge bg-success ms-2"><i class="fas fa-check"></i> Correct</span>
+                                    }
+                                </label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(quiz.OptionC))
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quiz-@quiz.Id" id="optionC-@quiz.Id" disabled>
+                                <label class="form-check-label" for="optionC-@quiz.Id">
+                                    <strong>C:</strong> @quiz.OptionC
+                                    @if (quiz.CorrectAnswer == "C")
+                                    {
+                                        <span class="badge bg-success ms-2"><i class="fas fa-check"></i> Correct</span>
+                                    }
+                                </label>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(quiz.OptionD))
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="quiz-@quiz.Id" id="optionD-@quiz.Id" disabled>
+                                <label class="form-check-label" for="optionD-@quiz.Id">
+                                    <strong>D:</strong> @quiz.OptionD
+                                    @if (quiz.CorrectAnswer == "D")
+                                    {
+                                        <span class="badge bg-success ms-2"><i class="fas fa-check"></i> Correct</span>
+                                    }
+                                </label>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Quiz Metadata - Only show creation date -->
+                    <div class="quiz-meta">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt"></i> Created: @quiz.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> No quizzes available for this content yet.
+    </div>
+}
+
+<div class="mt-4">
+    <a asp-controller="Quiz" asp-action="Create"
+       asp-route-courseId="@Model.Content.CourseId"
+       asp-route-contentId="@Model.Content.Id"
+       class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Quiz
+    </a>
+    <a asp-controller="ManageCourse" asp-action="Details" asp-route-id="@Model.Content.CourseId"
+       class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Content
+    </a>
+</div>
+
+@section Styles {
+    <style>
+        .content-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .pdf-actions .btn-group {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .embedded-pdf-viewer {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+
+        .pdfjs-controls {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .page-info {
+            font-size: 0.8rem;
+            min-width: 100px;
+            cursor: default;
+        }
+
+        .pdf-loading {
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pdf-canvas-container {
+            overflow-x: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .pdf-error {
+            font-size: 0.875rem;
+        }
+
+        .quiz-item {
+            border-left: 4px solid #007bff;
+        }
+
+        .video-container video {
+            max-width: 100%;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        @@media (max-width: 768px) {
+            .pdfjs-controls .btn-group .btn {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .page-info {
+                min-width: 80px;
+                font-size: 0.7rem;
+            }
+
+            .pdf-actions .btn-group .btn {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <!-- Include PDF.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <script>
+        // Set PDF.js worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Store PDF instances per content
+        const pdfStates = {};
+
+        function loadPdfJsViewer(contentId, pdfUrl) {
+            const viewer = document.getElementById('pdfjs-viewer-' + contentId);
+            const canvas = document.getElementById('pdf-canvas-' + contentId);
+            const loading = viewer.querySelector('.pdf-loading');
+            const errorDiv = viewer.querySelector('.pdf-error');
+
+            // Show viewer
+            viewer.style.display = 'block';
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            canvas.style.display = 'none';
+
+            // Initialize state for this PDF
+            if (!pdfStates[contentId]) {
+                pdfStates[contentId] = {
+                    pdfDoc: null,
+                    pageNum: 1,
+                    pageRendering: false,
+                    pageNumPending: null,
+                    scale: 1.0
+                };
+            }
+
+            const state = pdfStates[contentId];
+
+            // Load the PDF
+            pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                state.pdfDoc = pdf;
+                document.getElementById('page-count-' + contentId).textContent = pdf.numPages;
+                state.pageNum = 1;
+                renderPage(contentId, state.pageNum);
+            }).catch(function(error) {
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                console.error('Error loading PDF:', error);
+
+                // Fallback: Open in new tab after 3 seconds
+                setTimeout(() => {
+                    window.open(pdfUrl.replace('/ManageCourse/ViewPdf?url=', ''), '_blank');
+                }, 3000);
+            });
+
+            viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closePdfViewer(contentId) {
+            const viewer = document.getElementById('pdfjs-viewer-' + contentId);
+            viewer.style.display = 'none';
+        }
+
+        function renderPage(contentId, num) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.pageRendering = true;
+            const canvas = document.getElementById('pdf-canvas-' + contentId);
+            const loading = document.querySelector('#pdfjs-viewer-' + contentId + ' .pdf-loading');
+
+            state.pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: state.scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+
+                const renderTask = page.render(renderContext);
+
+                renderTask.promise.then(function() {
+                    state.pageRendering = false;
+                    loading.style.display = 'none';
+                    canvas.style.display = 'block';
+                    document.getElementById('page-num-' + contentId).textContent = num;
+
+                    if (state.pageNumPending !== null) {
+                        renderPage(contentId, state.pageNumPending);
+                        state.pageNumPending = null;
+                    }
+                });
+            }).catch(function(error) {
+                loading.style.display = 'none';
+                const errorDiv = document.querySelector('#pdfjs-viewer-' + contentId + ' .pdf-error');
+                errorDiv.style.display = 'block';
+                console.error('Error rendering page:', error);
+            });
+        }
+
+        function changePage(contentId, offset) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            const newPage = state.pageNum + offset;
+            if (newPage >= 1 && newPage <= state.pdfDoc.numPages) {
+                state.pageNum = newPage;
+                if (state.pageRendering) {
+                    state.pageNumPending = state.pageNum;
+                } else {
+                    renderPage(contentId, state.pageNum);
+                }
+            }
+        }
+
+        function changeZoom(contentId, delta) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.scale += delta;
+            state.scale = Math.max(0.5, Math.min(3, state.scale));
+            if (!state.pageRendering) {
+                renderPage(contentId, state.pageNum);
+            }
+        }
+
+        function resetZoom(contentId) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.scale = 1.0;
+            if (!state.pageRendering) {
+                renderPage(contentId, state.pageNum);
+            }
+        }
+    </script>
+}
+
+@functions {
+    public string ExtractYouTubeId(string url)
+    {
+        var regExp = new System.Text.RegularExpressions.Regex(@"^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*");
+        var match = regExp.Match(url);
+        return (match.Success && match.Groups[2].Length == 11) ? match.Groups[2].Value : null;
+    }
+
+    public string GetPdfUrl(string url)
+    {
+        // Use proxy for PDF.js viewer to avoid CORS issues
+        return Url.Action("ViewPdf", "ManageCourse", new { url = url });
+    }
+
+    // Improved PDF detection that handles Firebase Storage URLs
+    public bool IsPdfUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return false;
+
+        // Check if URL explicitly ends with .pdf
+        if (url.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Check Firebase Storage URLs that contain PDFs
+        if ((url.Contains("firebasestorage.googleapis.com") || url.Contains("firebasestorage.app")) &&
+            (url.Contains("/pdfs/") || url.Contains("%2Fpdfs%2F") || url.Contains(".pdf")))
+            return true;
+
+        // Check Cloudinary PDF URLs
+        if (url.Contains("cloudinary.com") && url.Contains(".pdf"))
+            return true;
+
+        return false;
+    }
+}

@@ -1,0 +1,185 @@
+﻿@using AI_Powered_Learning_Application.Models.ViewModels
+@model StudentCreateViewModel
+
+@{
+    ViewData["Title"] = "Create New Student";
+}
+
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center py-4">
+        <div>
+            <h1 class="h3 mb-2" style="color: #1e3a8a; font-weight: 600;">Create New Student</h1>
+            <p class="mb-0" style="color: #6b7280;">Add a new student to the system</p>
+        </div>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                        <i class="fas fa-user-plus me-2"></i>Student Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label fw-semibold"></label>
+                                <input asp-for="Name" class="form-control" placeholder="Enter student's first name" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Surname" class="form-label fw-semibold"></label>
+                                <input asp-for="Surname" class="form-control" placeholder="Enter student's last name" />
+                                <span asp-validation-for="Surname" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="Enter student's email address" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SkillLevel" class="form-label fw-semibold"></label>
+                            <select asp-for="SkillLevel" class="form-select">
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                            <span asp-validation-for="SkillLevel" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Subjects of Interest</label>
+                            <div class="mb-2">
+                                <div class="input-group">
+                                    <input type="text" id="newSubject" class="form-control" placeholder="Enter a subject">
+                                    <button type="button" id="addSubject" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus me-1"></i>Add
+                                    </button>
+                                </div>
+                                <small class="text-muted">Press Add to include subjects the student is interested in</small>
+                            </div>
+                            <div id="subjectsList" class="d-flex flex-wrap gap-2 mt-2">
+                                <!-- Subjects will be added here dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Create Student
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0" style="color: #1e3a8a; font-weight: 600;">
+                        <i class="fas fa-info-circle me-2"></i>Creating Students
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">Required Information</h6>
+                        <p class="small text-muted mb-2">All fields are required to create a new student account.</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-primary">Skill Levels</h6>
+                        <ul class="small text-muted mb-0">
+                            <li><strong>Beginner:</strong> New to the subject</li>
+                            <li><strong>Intermediate:</strong> Some experience</li>
+                            <li><strong>Advanced:</strong> Extensive knowledge</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h6 class="text-primary">Subjects of Interest</h6>
+                        <p class="small text-muted mb-0">Add subjects to personalize the learning experience for the student.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addSubjectBtn = document.getElementById('addSubject');
+            const newSubjectInput = document.getElementById('newSubject');
+            const subjectsList = document.getElementById('subjectsList');
+
+            addSubjectBtn.addEventListener('click', function() {
+                const subject = newSubjectInput.value.trim();
+
+                if (subject) {
+                    // Create subject badge
+                    const subjectBadge = document.createElement('span');
+                    subjectBadge.className = 'badge bg-primary bg-opacity-10 text-primary px-3 py-2';
+                    subjectBadge.style.cssText = 'border: 1px solid #dbeafe; font-size: 0.875rem;';
+                    subjectBadge.innerHTML = `
+                        ${subject}
+                        <input type="hidden" name="SubjectsOfInterest" value="${subject}" />
+                        <button type="button" class="btn-close btn-close-sm ms-1" onclick="removeSubject(this)"></button>
+                    `;
+                    subjectsList.appendChild(subjectBadge);
+                    newSubjectInput.value = '';
+                }
+            });
+
+            // Allow pressing Enter to add subject
+            newSubjectInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSubjectBtn.click();
+                }
+            });
+        });
+
+        function removeSubject(button) {
+            button.parentElement.remove();
+        }
+    </script>
+}
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn {
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-close-sm {
+        font-size: 0.7rem;
+        padding: 0.25rem;
+    }
+</style>

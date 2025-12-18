@@ -1,0 +1,493 @@
+﻿@model AI_Powered_Learning_Application.Models.ViewModels.CourseDetailsViewModel
+@inject AI_Powered_Learning_Application.Services.IFirebaseStorageService FirebaseStorageService
+
+<h2>@Model.Course.Title</h2>
+
+<div class="course-info">
+    <img src="@Model.Course.ImageUrl" alt="Course Image" style="max-width: 300px; border-radius: 8px;" class="img-fluid mb-3" />
+
+    <div class="course-meta mb-4">
+        <p><strong>Category:</strong> @Model.Course.Category</p>
+        <p><strong>Difficulty:</strong> @Model.Course.Difficulty</p>
+        <p><strong>Description:</strong> @Model.Course.Description</p>
+    </div>
+
+    <div class="course-actions mb-4">
+        <a asp-controller="CourseContent" asp-action="Create" asp-route-courseId="@Model.Course.Id" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Content
+        </a>
+        <a asp-controller="ManageCourse" asp-action="Edit" asp-route-id="@Model.Course.Id" class="btn btn-secondary">
+            <i class="fas fa-edit"></i> Edit Course
+        </a>
+    </div>
+</div>
+
+<hr />
+
+<h4>Course Content</h4>
+
+@if (Model.Contents.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Content</th>
+                    <th>Uploaded</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var content in Model.Contents)
+                {
+                    <tr>
+                        <td>@content.Title</td>
+                        <td>@content.ContentType</td>
+                        <td>
+                            @if (content.ContentUrls.Any())
+                            {
+                                <div class="content-preview-container">
+                                    @foreach (var url in content.ContentUrls)
+                                    {
+                                        <div class="content-preview mb-2">
+                                            @if (url.Contains("youtube.com") || url.Contains("youtu.be"))
+                                            {
+                                                <div class="embed-responsive embed-responsive-16by9" style="max-width: 300px;">
+                                                    <iframe class="embed-responsive-item"
+                                                            src="https://www.youtube.com/embed/@(ExtractYouTubeId(url))"
+                                                            allowfullscreen></iframe>
+                                                </div>
+                                            }
+                                            else if (IsPdfUrl(url))
+                                            {
+                                                <div class="pdf-viewer-container">
+                                                    <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                                    <span class="storage-badge @(GetStorageBadgeClass(url))">
+                                                        @GetStorageProvider(url)
+                                                    </span>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button type="button" class="btn btn-outline-success"
+                                                                onclick="loadPdfJsViewer('@content.Id', '@GetPdfUrl(url)')">
+                                                            <i class="fas fa-eye"></i> View PDF
+                                                        </button>
+                                                        <a href="@Url.Action("ViewPdf", "ManageCourse", new { url = url })" target="_blank" class="btn btn-outline-primary">
+                                                            <i class="fas fa-download"></i> Download
+                                                        </a>
+                                                    </div>
+
+                                                    <!-- PDF.js Viewer Container -->
+                                                    <div id="pdfjs-viewer-@content.Id" class="embedded-pdf-viewer mt-2" style="display: none;">
+                                                        <div class="pdfjs-controls mb-2">
+                                                            <div class="btn-group btn-group-sm" role="group">
+                                                                <button type="button" class="btn btn-outline-secondary" onclick="changePage('@content.Id', -1)">
+                                                                    <i class="fas fa-chevron-left"></i> Prev
+                                                                </button>
+                                                                <span class="btn btn-outline-dark page-info">Page: <span id="page-num-@content.Id">1</span> / <span id="page-count-@content.Id">0</span></span>
+                                                                <button type="button" class="btn btn-outline-secondary" onclick="changePage('@content.Id', 1)">
+                                                                    <i class="fas fa-chevron-right"></i> Next
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-info" onclick="changeZoom('@content.Id', 0.2)">
+                                                                    <i class="fas fa-search-plus"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-info" onclick="changeZoom('@content.Id', -0.2)">
+                                                                    <i class="fas fa-search-minus"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-warning" onclick="resetZoom('@content.Id')">
+                                                                    <i class="fas fa-sync-alt"></i> Reset
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="pdf-loading alert alert-info alert-sm mb-2">
+                                                            <i class="fas fa-spinner fa-spin"></i> Loading PDF...
+                                                        </div>
+                                                        <div class="pdf-canvas-container" style="text-align: center;">
+                                                            <canvas id="pdf-canvas-@content.Id" style="display: none; border: 1px solid #ddd; max-width: 100%;"></canvas>
+                                                        </div>
+                                                        <div class="pdf-error alert alert-danger mt-2" style="display: none;">
+                                                            <p><i class="fas fa-exclamation-triangle"></i> Failed to load PDF. Please try downloading the file instead.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else if (url.EndsWith(".mp4") || url.EndsWith(".mov") || url.EndsWith(".avi"))
+                                            {
+                                                <video controls width="200" class="bg-dark">
+                                                    <source src="@url" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            }
+                                            else
+                                            {
+                                                <a href="@url" target="_blank">View Content</a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </td>
+                        <td>@content.UploadedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a asp-controller="CourseContent" asp-action="Edit"
+                                   asp-route-courseId="@Model.Course.Id"
+                                   asp-route-contentId="@content.Id"
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-controller="CourseContent" asp-action="Details"
+                                   asp-route-courseId="@Model.Course.Id"
+                                   asp-route-contentId="@content.Id"
+                                   class="btn btn-sm btn-info">
+                                    <i class="fas fa-info-circle"></i> Details
+                                </a>
+
+                                <form asp-controller="CourseContent" asp-action="Delete"
+                                      asp-route-courseId="@Model.Course.Id"
+                                      asp-route-contentId="@content.Id"
+                                      method="post"
+                                      onsubmit="return confirm('Are you sure you want to delete this content?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No content added for this course yet. Click "Add Content" to get started.
+    </div>
+}
+<a asp-controller="ManageCourse" asp-action="Index" asp-route-courseId="@Model.Course.Id" 
+   class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Back to Course
+</a>
+
+@section Styles {
+    <style>
+        .course-meta p {
+            margin-bottom: 0.8rem;
+        }
+
+        .content-preview-container {
+            max-width: 300px;
+        }
+
+        .content-preview {
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            min-height: 60px;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .btn-group .btn {
+            margin-right: 5px;
+        }
+
+            .btn-group .btn:last-child {
+                margin-right: 0;
+            }
+
+        .pdf-viewer-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .embedded-pdf-viewer {
+            width: 100%;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* PDF.js specific styles */
+        .pdfjs-controls {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .page-info {
+            font-size: 0.8rem;
+            min-width: 100px;
+            cursor: default;
+        }
+
+        .pdf-loading {
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pdf-canvas-container {
+            overflow-x: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .pdf-error {
+            font-size: 0.875rem;
+        }
+
+        /* Storage badges */
+        .storage-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-firebase {
+            background-color: #ffa000;
+        }
+
+        .badge-cloudinary {
+            background-color: #3448c5;
+        }
+
+        .badge-other {
+            background-color: #6c757d;
+        }
+
+        /* Responsive controls */
+        .pdfjs-controls .btn-group {
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+
+        @@media (max-width: 768px) {
+            .pdfjs-controls .btn-group .btn {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .page-info {
+                min-width: 80px;
+                font-size: 0.7rem;
+            }
+
+            .storage-badge {
+                font-size: 0.6rem;
+                padding: 0.1rem 0.3rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <!-- Include PDF.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <script>
+        // Set PDF.js worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Store PDF instances per content
+        const pdfStates = {};
+
+        function loadPdfJsViewer(contentId, pdfUrl) {
+            const viewer = document.getElementById('pdfjs-viewer-' + contentId);
+            const canvas = document.getElementById('pdf-canvas-' + contentId);
+            const loading = viewer.querySelector('.pdf-loading');
+            const errorDiv = viewer.querySelector('.pdf-error');
+
+            if (viewer.style.display === 'none') {
+                // Show viewer
+                viewer.style.display = 'block';
+                loading.style.display = 'block';
+                errorDiv.style.display = 'none';
+                canvas.style.display = 'none';
+
+                // Initialize state for this PDF
+                if (!pdfStates[contentId]) {
+                    pdfStates[contentId] = {
+                        pdfDoc: null,
+                        pageNum: 1,
+                        pageRendering: false,
+                        pageNumPending: null,
+                        scale: 1.0
+                    };
+                }
+
+                const state = pdfStates[contentId];
+
+                // Load the PDF
+                pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                    state.pdfDoc = pdf;
+                    document.getElementById('page-count-' + contentId).textContent = pdf.numPages;
+                    state.pageNum = 1;
+                    renderPage(contentId, state.pageNum);
+                }).catch(function(error) {
+                    loading.style.display = 'none';
+                    errorDiv.style.display = 'block';
+                    console.error('Error loading PDF:', error);
+
+                    // If PDF.js fails, try opening in new tab as fallback
+                    setTimeout(() => {
+                        window.open(pdfUrl, '_blank');
+                    }, 2000);
+                });
+
+                viewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                // Hide viewer
+                viewer.style.display = 'none';
+            }
+        }
+
+        function renderPage(contentId, num) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.pageRendering = true;
+            const canvas = document.getElementById('pdf-canvas-' + contentId);
+            const loading = document.querySelector('#pdfjs-viewer-' + contentId + ' .pdf-loading');
+
+            state.pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: state.scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+
+                const renderTask = page.render(renderContext);
+
+                renderTask.promise.then(function() {
+                    state.pageRendering = false;
+                    loading.style.display = 'none';
+                    canvas.style.display = 'block';
+                    document.getElementById('page-num-' + contentId).textContent = num;
+
+                    if (state.pageNumPending !== null) {
+                        renderPage(contentId, state.pageNumPending);
+                        state.pageNumPending = null;
+                    }
+                });
+            }).catch(function(error) {
+                loading.style.display = 'none';
+                const errorDiv = document.querySelector('#pdfjs-viewer-' + contentId + ' .pdf-error');
+                errorDiv.style.display = 'block';
+                console.error('Error rendering page:', error);
+            });
+        }
+
+        function changePage(contentId, offset) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            const newPage = state.pageNum + offset;
+            if (newPage >= 1 && newPage <= state.pdfDoc.numPages) {
+                state.pageNum = newPage;
+                if (state.pageRendering) {
+                    state.pageNumPending = state.pageNum;
+                } else {
+                    renderPage(contentId, state.pageNum);
+                }
+            }
+        }
+
+        function changeZoom(contentId, delta) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.scale += delta;
+            state.scale = Math.max(0.5, Math.min(3, state.scale)); // Limit zoom between 0.5x and 3x
+            if (!state.pageRendering) {
+                renderPage(contentId, state.pageNum);
+            }
+        }
+
+        function resetZoom(contentId) {
+            const state = pdfStates[contentId];
+            if (!state || !state.pdfDoc) return;
+
+            state.scale = 1.0;
+            if (!state.pageRendering) {
+                renderPage(contentId, state.pageNum);
+            }
+        }
+    </script>
+}
+
+@functions {
+    public string ExtractYouTubeId(string url)
+    {
+        var regExp = new System.Text.RegularExpressions.Regex(@"^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*");
+        var match = regExp.Match(url);
+        return (match.Success && match.Groups[2].Length == 11) ? match.Groups[2].Value : null;
+    }
+
+    public string GetPdfUrl(string url)
+    {
+        // Use proxy for PDF.js viewer to avoid CORS issues
+        return Url.Action("ViewPdf", "ManageCourse", new { url = url });
+    }
+
+    public string GetStorageProvider(string url)
+    {
+        if (url.Contains("firebasestorage.googleapis.com") || url.Contains("firebasestorage.app"))
+            return "Firebase";
+        else if (url.Contains("cloudinary.com"))
+            return "Cloudinary";
+        else
+            return "External";
+    }
+
+    public string GetStorageBadgeClass(string url)
+    {
+        if (url.Contains("firebasestorage.googleapis.com") || url.Contains("firebasestorage.app"))
+            return "badge-firebase";
+        else if (url.Contains("cloudinary.com"))
+            return "badge-cloudinary";
+        else
+            return "badge-other";
+    }
+
+    // Improved PDF detection that handles Firebase Storage URLs
+    public bool IsPdfUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return false;
+
+        // Check if URL explicitly ends with .pdf
+        if (url.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Check Firebase Storage URLs that contain PDFs
+        if ((url.Contains("firebasestorage.googleapis.com") || url.Contains("firebasestorage.app")) &&
+            (url.Contains("/pdfs/") || url.Contains("%2Fpdfs%2F") || url.Contains(".pdf")))
+            return true;
+
+        // Check Cloudinary PDF URLs
+        if (url.Contains("cloudinary.com") && url.Contains(".pdf"))
+            return true;
+
+        return false;
+    }
+}

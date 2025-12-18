@@ -1,0 +1,24 @@
+﻿@model List<AI_Powered_Learning_Application.Models.Student>
+
+<h2>Deleted Students</h2>
+
+<table class="table">
+    <thead>
+        <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.name @s.surname</td>
+                <td>@s.email</td>
+                <td>
+                    <form asp-action="Restore" method="post">
+                        <input type="hidden" name="id" value="@s.Id" />
+                        <button class="btn btn-success btn-sm">Restore</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

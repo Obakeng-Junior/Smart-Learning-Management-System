@@ -1,0 +1,374 @@
+﻿@model AI_Powered_Learning_Application.Models.ViewModels.CourseContentFormViewModel
+@{
+    ViewData["Title"] = "Edit Content";
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h4>Edit Course Content</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" id="contentForm">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="CourseId" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Title" class="font-weight-bold"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description" class="font-weight-bold"></label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <!-- Content Type Selection -->
+            <div class="form-group">
+                <label asp-for="ContentType" class="font-weight-bold"></label>
+                <select asp-for="ContentType" class="form-control" id="contentTypeSelect" required>
+                    <option value="">-- Select Content Type --</option>
+                    <option value="PDF">PDF Document</option>
+                    <option value="Video">Video File</option>
+                    <option value="Link">External Link</option>
+                </select>
+                <span asp-validation-for="ContentType" class="text-danger"></span>
+            </div>
+
+            <!-- Current Content Display -->
+            <div class="form-group">
+                <label class="font-weight-bold">Current Content</label>
+                @if (Model.ExistingFileUrls.Any())
+                {
+                    <div class="existing-files-container bg-light p-3 rounded">
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle"></i>
+                            Current content will be preserved unless you upload new files below.
+                        </div>
+                        @foreach (var url in Model.ExistingFileUrls)
+                        {
+                            <div class="existing-file mb-3 p-2 border rounded">
+                                @if (url.Contains("youtube.com") || url.Contains("youtu.be"))
+                                {
+                                    <div class="embed-responsive embed-responsive-16by9 mb-2">
+                                        <iframe class="embed-responsive-item"
+                                                src="https://www.youtube.com/embed/@(ExtractYouTubeId(url))"
+                                                allowfullscreen></iframe>
+                                    </div>
+                                    <a href="@url" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> Open in YouTube
+                                    </a>
+                                }
+                                else if (url.EndsWith(".pdf"))
+                                {
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-file-pdf fa-3x text-danger mr-3"></i>
+                                        <div>
+                                            <a href="@url" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View PDF
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                                else if (url.EndsWith(".mp4") || url.EndsWith(".mov") || url.EndsWith(".avi"))
+                                {
+                                    <div class="mb-2">
+                                        <video controls width="100%" class="bg-dark rounded">
+                                            <source src="@url" type="video/mp4">
+                                        </video>
+                                    </div>
+                                    <a href="@url" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-download"></i> Download Video
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a href="@url" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> View Content
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">No content currently uploaded.</div>
+                }
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="form-group" id="fileUploadGroup">
+                <label class="font-weight-bold">Update Files (Optional)</label>
+                <div class="custom-file">
+                    <input asp-for="ContentFiles" type="file" multiple class="custom-file-input" id="customFile" accept=".pdf,.mp4,.mov,.avi">
+                    <label class="custom-file-label" for="customFile">Choose new files (optional)...</label>
+                </div>
+                <small class="form-text text-muted">
+                    Optional: Select new files to replace current content. Leave empty to keep existing files.
+                </small>
+
+                <!-- File preview container -->
+                <div id="filePreviews" class="mt-3"></div>
+            </div>
+
+            <!-- URL Input Section -->
+            <div class="form-group" id="urlGroup" style="display: none;">
+                <label asp-for="ContentUrl" class="font-weight-bold"></label>
+                <input asp-for="ContentUrl" class="form-control" placeholder="https://example.com" id="contentUrlInput" />
+                <small class="form-text text-muted">Enter a valid YouTube, Vimeo, or other media URL</small>
+                <span asp-validation-for="ContentUrl" class="text-danger"></span>
+
+                <!-- URL preview container -->
+                <div id="urlPreview" class="mt-3"></div>
+            </div>
+
+            <div class="form-group mt-4">
+                <button type="submit" class="btn btn-success mr-2" id="submitBtn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="@Url.Action("Details", "ManageCourse", new { id = Model.CourseId })" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function() {
+            // Initialize field visibility based on current content type
+            toggleFields();
+
+            // Handle content type changes
+            $('#contentTypeSelect').change(function() {
+                toggleFields();
+                clearValidation();
+            });
+
+            // Handle file selection
+            $('#customFile').change(function() {
+                const files = this.files;
+                let fileNames = '';
+
+                if (files.length > 0) {
+                    fileNames = Array.from(files).map(f => f.name).join(', ');
+                    updateFilePreviews(files);
+                }
+
+                $(this).next('.custom-file-label').html(fileNames || 'Choose new files (optional)...');
+            });
+
+            // Handle URL preview
+            $('#contentUrlInput').on('input', function() {
+                updateUrlPreview($(this).val());
+            });
+
+            // Form submission
+            $('#contentForm').submit(function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Show loading state
+                $('#submitBtn').html('<i class="fas fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+                return true;
+            });
+
+            function toggleFields() {
+                const isLink = $('#contentTypeSelect').val() === 'Link';
+                $('#fileUploadGroup').toggle(!isLink);
+                $('#urlGroup').toggle(isLink);
+            }
+
+            function clearValidation() {
+                $('.text-danger').text('');
+                $('.is-invalid').removeClass('is-invalid');
+            }
+
+            function updateFilePreviews(files) {
+                $('#filePreviews').empty();
+
+                Array.from(files).forEach(file => {
+                    if (file.size > 50 * 1024 * 1024) {
+                        $('#filePreviews').append(
+                            `<div class="alert alert-danger mb-2">
+                                File too large: ${file.name} (max 50MB)
+                            </div>`
+                        );
+                        return;
+                    }
+
+                    const preview = createFilePreview(file);
+                    $('#filePreviews').append(preview);
+                });
+            }
+
+            function updateUrlPreview(url) {
+                $('#urlPreview').empty();
+
+                if (!url) return;
+
+                if (isValidUrl(url)) {
+                    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                        const videoId = extractYouTubeId(url);
+                        $('#urlPreview').html(`
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="embed-responsive embed-responsive-16by9">
+                                        <iframe class="embed-responsive-item"
+                                            src="https://www.youtube.com/embed/${videoId}"
+                                            allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        $('#urlPreview').html(`
+                            <div class="alert alert-info">
+                                <a href="${url}" target="_blank">${url}</a>
+                            </div>
+                        `);
+                    }
+                }
+            }
+
+            function validateForm() {
+                let isValid = true;
+                const contentType = $('#contentTypeSelect').val();
+
+                // Clear previous errors
+                clearValidation();
+
+                // Validate content type
+                if (!contentType) {
+                    $('#contentTypeSelect').addClass('is-invalid')
+                        .next('.text-danger').text('Please select a content type');
+                    isValid = false;
+                }
+
+                // For Link type, validate URL
+                if (contentType === 'Link') {
+                    const url = $('#contentUrlInput').val();
+                    if (!url) {
+                        $('#contentUrlInput').addClass('is-invalid')
+                            .next('.text-danger').text('Please enter a URL');
+                        isValid = false;
+                    } else if (!isValidUrl(url)) {
+                        $('#contentUrlInput').addClass('is-invalid')
+                            .next('.text-danger').text('Please enter a valid URL');
+                        isValid = false;
+                    }
+                }
+
+                // Files are always optional during edit - no validation needed
+
+                return isValid;
+            }
+
+            function createFilePreview(file) {
+                const previewDiv = $(`<div class="file-preview card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${file.name}</strong>
+                                <div class="text-muted">${formatFileSize(file.size)}</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-file" data-file="${file.name}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`);
+
+                if (file.type.startsWith('image/')) {
+                    previewDiv.find('.card-body').prepend(
+                        `<img src="${URL.createObjectURL(file)}" class="img-thumbnail mb-2" style="max-height: 100px;">`
+                    );
+                }
+                else if (file.type === 'application/pdf') {
+                    previewDiv.find('.card-body').prepend(
+                        `<i class="fas fa-file-pdf fa-2x text-danger mb-2 d-block"></i>`
+                    );
+                }
+                else if (file.type.startsWith('video/')) {
+                    previewDiv.find('.card-body').prepend(
+                        `<video controls height="120" class="bg-dark rounded mb-2 w-100">
+                            <source src="${URL.createObjectURL(file)}" type="${file.type}">
+                        </video>`
+                    );
+                }
+
+                return previewDiv;
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function extractYouTubeId(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            }
+
+            function isValidUrl(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+        });
+    </script>
+
+    <style>
+        .file-preview {
+            transition: all 0.3s ease;
+        }
+
+            .file-preview:hover {
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            }
+
+        .existing-files-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .existing-file {
+            transition: all 0.3s ease;
+        }
+
+            .existing-file:hover {
+                background-color: #f8f9fa;
+            }
+
+        .custom-file-label::after {
+            content: "Browse";
+        }
+    </style>
+}
+
+@functions {
+    public string ExtractYouTubeId(string url)
+    {
+        var regExp = new System.Text.RegularExpressions.Regex(@"^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*");
+        var match = regExp.Match(url);
+        return (match.Success && match.Groups[2].Length == 11) ? match.Groups[2].Value : null;
+    }
+}

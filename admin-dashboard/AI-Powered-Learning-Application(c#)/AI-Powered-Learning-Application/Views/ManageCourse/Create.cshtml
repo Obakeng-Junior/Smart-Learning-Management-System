@@ -1,0 +1,77 @@
+﻿@model AI_Powered_Learning_Application.Models.ManageCourses
+
+<h2>@(Model?.Id == null ? "Create Course" : "Edit Course")</h2>
+
+<form asp-action="Create" enctype="multipart/form-data">
+   @*  @if (Model?.Id != null)
+    {
+        <input type="hidden" asp-for="Id" />
+    } *@
+
+    <div class="form-group">
+        <label asp-for="Title"></label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Category" class="control-label"></label>
+        <select asp-for="Category" class="form-control" asp-items="ViewBag.CategoryList">
+            <option value="">-- Select Category --</option>
+        </select>
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+
+
+
+
+    <div class="form-group">
+        <label asp-for="Difficulty"></label>
+        <select asp-for="Difficulty" class="form-control">
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Upload Course Image</label>
+        <input type="file" name="imageFile" class="form-control-file" />
+    </div>
+
+    @* ✅ Preview existing image only if editing *@
+    @if (Model?.ImageUrl != null && !string.IsNullOrWhiteSpace(Model.ImageUrl))
+    {
+        <div class="form-group">
+            <label>Current Image:</label><br />
+            <img src="@Model.ImageUrl" alt="Course Image" style="max-width: 200px;" />
+        </div>
+    }
+
+    <div class="form-group">
+        <img id="imagePreview" style="max-width: 200px; display:none;" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+</form>
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

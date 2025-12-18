@@ -1,0 +1,30 @@
+﻿@model List<AI_Powered_Learning_Application.Models.CourseContent>
+
+<h2>Course Contents</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Content Type</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var content in Model)
+        {
+            <tr>
+                <td>@content.Title</td>
+                <td>@content.Description</td>
+                <td>@content.ContentType</td>
+                <td>
+                    <a href="@Url.Action("Edit", "CourseContent", new { courseId = content.CourseId, contentId = content.Id })" class="btn btn-primary">Edit</a>
+                    <a href="@Url.Action("Delete", "CourseContent", new { courseId = content.CourseId, contentId = content.Id })" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Create", "CourseContent", new { courseId = Model.FirstOrDefault()?.CourseId })" class="btn btn-success">Add New Content</a>
