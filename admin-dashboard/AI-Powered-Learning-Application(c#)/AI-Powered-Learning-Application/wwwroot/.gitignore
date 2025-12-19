@@ -1,0 +1,4 @@
+# Firebase secrets
+*.json
+appData/
+firebase-keys/
