@@ -91,3 +91,20 @@ To run the app:
 
 ```bash
 flutter run --dart-define=API_KEY="YOUR_FIREBASE_API_KEY"
+
+### 🔐 Firebase Admin Configuration (Required)
+
+This project uses Firebase Admin SDK.
+
+For security reasons, the Firebase service account key is **not included** in the repository.
+
+#### Setup Steps for C#:
+1. Create a Firebase project
+2. Generate a Firebase Admin SDK service account key
+3. Store the JSON file locally
+4. Set the environment variable:
+
+**Windows**
+```powershell
+setx FIREBASE_KEY_PATH "C:\path\to\firebase-key.json"
+
