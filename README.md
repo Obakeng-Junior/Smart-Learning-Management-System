@@ -1,10 +1,10 @@
-# 📚 Smart Learning Management System
+# Smart Learning Management System
 
 An advanced learning management system (LMS) designed to enhance student learning through personalized support, intelligent tutoring, and progress-driven recommendations. The system integrates a **Flutter mobile application** for students with an **ASP.NET Core MVC admin dashboard** for management and analytics.
 
 ---
 
-## 🚀 Project Overview
+##  Project Overview
 
 This project aims to address the challenge of learning platforms by introducing **adaptive and intelligent learning support**. Instead of static content delivery, the system tracks student progress, learning behavior, and interactions to provide personalized assistance.
 
@@ -12,11 +12,11 @@ The platform is suitable for academic institutions and was developed as part of 
 
 ---
 
-## 🧩 System Architecture
+##  System Architecture
 
 The system consists of two main components:
 
-### 📱 Mobile Application (Flutter)
+###  Mobile App (Flutter)
 
 * Student authentication
 * Course browsing and enrollment
@@ -25,17 +25,17 @@ The system consists of two main components:
 * Smart Tutor interaction
 * Rule-based smart recommendations
 
-### 🖥️ Admin Web Application (ASP.NET Core MVC)
+###  Admin Web App (ASP.NET Core MVC)
 
 * Student management
 * Course and content management
 * Monitoring student enrollment and progress
-* AI Tutor API integration
+* Smart Tutor API integration
 * Centralized data management
 
 ---
 
-## 🤖 Smart Tutor (ML.NET Web API)
+##  Smart Tutor (ML.NET Web API)
 
 The Smart Tutor is implemented using a **custom ML.NET-powered Web API**:
 
@@ -48,19 +48,19 @@ This approach avoids dependency on third-party AI APIs and ensures full control 
 
 ---
 
-## 🎯 Key Features
+##  Key Features
 
-* 📊 **Student Progress Tracking**
-* 🧠 **Smart Tutor for Learning Support**
-* 🎓 **Course Enrollment System**
-* 🔍 **Smart Rule-Based Recommendations**
-* 🔐 **Secure Authentication**
-* ☁️ **Firebase Firestore Integration**
-* 🔄 **REST API Communication**
+*  **Student Progress Tracking**
+*  **Smart Tutor for Learning Support**
+*  **Course Enrollment System**
+*  **Smart Rule-Based Recommendations**
+*  **Secure Authentication**
+*  **Firebase Firestore Integration**
+*  **REST API Communication**
 
 ---
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 ### Mobile App
 
@@ -78,7 +78,7 @@ This approach avoids dependency on third-party AI APIs and ensures full control 
 
 ---
 
-## 🔐 Configuration (API Key)
+##  Configuration (API Key)
 
 This project uses Firebase.  
 For security reasons, API keys are **not included** in the repository.
@@ -92,7 +92,7 @@ To run the app:
 ```bash
 flutter run --dart-define=API_KEY="YOUR_FIREBASE_API_KEY"
 
-### 🔐 Firebase Admin Configuration (Required)
+###  Firebase Admin Configuration (Required)
 
 This project uses Firebase Admin SDK.
 
